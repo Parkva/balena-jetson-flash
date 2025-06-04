@@ -15,8 +15,8 @@ Balena devices support
 * Jetson TX2 - L4T 32.6.1
 * Jetson TX2 NX (in Jetson Xavier NX Devkit) - L4T 32.7.1
 * Jetson Xavier AGX - L4T 32.7.1
-* Jetson Xavier NX Devkit eMMC - L4T 32.6.1
-* Jetson Xavier NX Devkit SD-CARD - L4T 32.6.1
+* Jetson Xavier NX Devkit eMMC - L4T 32.7.6
+* Jetson Xavier NX Devkit SD-CARD - L4T 32.7.6
 
 WARNINGS
 --------
@@ -74,3 +74,57 @@ License
 -------
 
 The project is licensed under the Apache 2.0 license.
+
+
+Parkva Changes
+--------------
+
+We encountered issues when trying to flash an NVIDIA Xaviar NX device.
+
+This is the error we get when attempting to flash using Jetpack 4.6 l4t 32.6.1
+
+```jsx
+0000000000000102: E> NONE: Invalid value MemBct dram size: 0MB for slot: 0.
+```
+
+### The exact same problem we are seeing
+
+[Flashing Jetson Xavier NX 8GB fails - Invalid value MemBct dram size: 0MB for slot: 0](https://forums.developer.nvidia.com/t/flashing-jetson-xavier-nx-8gb-fails-invalid-value-membct-dram-size-0mb-for-slot-0/320795)
+
+[Different Xavier NX Modules Exhibit Inconsistent Flashing Behavior](https://forums.developer.nvidia.com/t/different-xavier-nx-modules-exhibit-inconsistent-flashing-behavior/223801)
+
+
+### Helpful Resources
+
+[NVIDIA Jetson FAQ](https://developer.nvidia.com/embedded/faq#jetson-part-numbers)
+
+[Jetson Linux R32.6.1 Release Page](https://developer.nvidia.com/embedded/linux-tegra-r3261)
+
+#### This discusses the patch that is needed to support the 16GB eMMC
+
+[How to use NVIDIA Jetson devices on balena - 2024 edition](https://blog.balena.io/how-to-use-nvidia-jetson-devices-on-balena/)
+
+[Archived Documentation For Jetson Software](https://docs.nvidia.com/jetson/archives/)
+
+[JetPack Archive](https://developer.nvidia.com/embedded/jetpack-archive)
+
+### This JetPack version solves the DRAM problem
+
+[JetPack SDK 4.6.6](https://developer.nvidia.com/jetpack-sdk-466)
+
+This provides support for the new DRAM: Micron MT53E1G32D2FW-046 WT:B.
+
+### Balena-based solution
+
+In installer-01 device:
+
+1. Download jetson-flash from https://github.com/balena-os/jetson-flash
+2. Switch to tag v0.5.23 (determined this from: https://github.com/balena-os/jetson-flash/blob/master/docs/jetson-xavier-nx-devkit-emmc.md)
+3. Install NodeJS version 12.22.12 and npm init to install dependencies
+4. Modify resin-jetson-flash.js source to change the URL for “jetson-xavier-nx-devkit-emmc” to be “https://developer.nvidia.com/embedded/l4t/r32_release_v7.6/t186/jetson_linux_r32.7.6_aarch64.tbz2” to pick up the Nvidia Micron DRAM fixes.
+5. In balena.io, add a new device for device type “Nvidia Jetson Xavier NX Devkit eMMC” with a Balena OS of “2.98.33” and download that to the ~/images directory
+6. To flash:
+
+```jsx
+./bin/cmd.js -f ~/images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img  -m jetson-xavier-nx-devkit-emmc
+```
