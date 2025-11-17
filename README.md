@@ -87,6 +87,8 @@ This is the error we get when attempting to flash using Jetpack 4.6 l4t 32.6.1
 0000000000000102: E> NONE: Invalid value MemBct dram size: 0MB for slot: 0.
 ```
 
+David note: Switch to tag v0.5.23 (determined this from: https://github.com/balena-os/jetson-flash/blob/master/docs/jetson-xavier-nx-devkit-emmc.md)
+
 ### The exact same problem we are seeing
 
 [Flashing Jetson Xavier NX 8GB fails - Invalid value MemBct dram size: 0MB for slot: 0](https://forums.developer.nvidia.com/t/flashing-jetson-xavier-nx-8gb-fails-invalid-value-membct-dram-size-0mb-for-slot-0/320795)
@@ -116,15 +118,36 @@ This provides support for the new DRAM: Micron MT53E1G32D2FW-046 WT:B.
 
 ### Balena-based solution
 
+This assumes flashing a Balena Xavier NX device
+
 In installer-01 device:
 
 1. Download jetson-flash from https://github.com/balena-os/jetson-flash
-2. Switch to tag v0.5.23 (determined this from: https://github.com/balena-os/jetson-flash/blob/master/docs/jetson-xavier-nx-devkit-emmc.md)
+2. Switch to the parkva branch
 3. Install NodeJS version 12.22.12 and npm init to install dependencies
-4. Modify resin-jetson-flash.js source to change the URL for “jetson-xavier-nx-devkit-emmc” to be “https://developer.nvidia.com/embedded/l4t/r32_release_v7.6/t186/jetson_linux_r32.7.6_aarch64.tbz2” to pick up the Nvidia Micron DRAM fixes.
-5. In balena.io, add a new device for device type “Nvidia Jetson Xavier NX Devkit eMMC” with a Balena OS of “2.98.33” and download that to the ~/images directory
-6. To flash:
+4. To flash:
 
 ```jsx
-./bin/cmd.js -f ~/images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img  -m jetson-xavier-nx-devkit-emmc
+./bin/cmd.js -f /images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img  -m jetson-xavier-nx-devkit-emmc
+```
+
+## Parkva Patrol System and Application Setup
+
+### Background information on Balena OS
+https://docs.balena.io/learn/welcome/primer/
+
+```sh
+npm install
+```
+
+```sh
+git clone  --single-branch --branch parkva git@github.com:Parkva/balena-jetson-flash.git
+```
+
+```sh
+lsusb
+```
+
+```sh
+./bin/cmd.js -f /images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img  -m jetson-xavier-nx-devkit-emmc
 ```
