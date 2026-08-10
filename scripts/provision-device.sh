@@ -276,7 +276,24 @@ else
 	# Trailing `exit` makes the remote (interactive) shell close itself. Without it,
 	# `balena device ssh` does not propagate stdin EOF and the session hangs after
 	# the last command instead of returning.
-	printf '%s\nexit 0\n' "$REMOTE_SCRIPT" | balena device ssh "$UUID"
+	#
+	# The host OS SSH goes through the balena gateway, which caps auth attempts. When
+	# your ssh-agent holds several keys, the gateway can intermittently reject before
+	# the accepted key is offered ("Permission denied (publickey)"). Retry a few times
+	# so a transient auth miss does not abort provisioning; the remote script is
+	# idempotent, so re-running it is safe.
+	ssh_attempt=1
+	ssh_max_attempts=4
+	until printf '%s\nexit 0\n' "$REMOTE_SCRIPT" | balena device ssh "$UUID"; do
+		if [[ "$ssh_attempt" -ge "$ssh_max_attempts" ]]; then
+			echo "Error: host OS SSH failed after $ssh_max_attempts attempts." >&2
+			echo "Check 'ssh-add -l' and your balenaCloud SSH keys, then re-run." >&2
+			exit 1
+		fi
+		echo "  SSH attempt $ssh_attempt failed; retrying in 5s..." >&2
+		ssh_attempt=$((ssh_attempt + 1))
+		sleep 5
+	done
 fi
 
 # ---------------------------------------------------------------------------
