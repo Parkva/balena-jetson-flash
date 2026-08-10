@@ -168,3 +168,69 @@ lsusb
 ```sh
 ./bin/cmd.js -f /images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img  -m jetson-xavier-nx-devkit-emmc
 ```
+
+### Post-Flash Provisioning
+
+Once a device has been flashed and comes online in balenaCloud, the remaining
+configuration (rename, host OS `/etc/hosts` entry, the four NetworkManager connection
+files, and the `MASKCAM_*` device variables) can be applied automatically instead of
+by hand.
+
+`scripts/provision-device.sh` drives the [balena CLI](https://github.com/balena-io/balena-cli)
+to do all of it from a device UUID and device number.
+
+#### One-time setup: install and log in to the balena CLI
+
+The standalone CLI is self-contained (it bundles its own Node), so it avoids the
+Node-12-vs-newer issue the flasher has — no `nvm use` needed for the CLI.
+
+```sh
+# Download the standalone Linux x64 release (-L follows GitHub's redirect)
+curl -L -o balena-cli.tar.gz \
+  https://github.com/balena-io/balena-cli/releases/download/v25.2.0/balena-cli-v25.2.0-linux-x64-standalone.tar.gz
+
+# Extract — creates a ./balena/ folder with the launcher at balena/bin/balena
+tar -xzf balena-cli.tar.gz
+
+# Install system-wide so `balena` is on your PATH
+sudo mv balena /usr/local/lib/balena-cli
+sudo ln -s /usr/local/lib/balena-cli/bin/balena /usr/local/bin/balena
+
+# Verify, then log in (web authorization opens a browser; use a token if headless)
+balena version
+balena login
+balena whoami
+```
+
+#### Run the provisioning script
+
+```sh
+./scripts/provision-device.sh <device-uuid> <number>
+```
+
+What it does:
+
+1. **Renames** the device to `zzz-p400<number>-xnx-eth0`.
+2. **Host OS** (over `balena device ssh`): remounts `/` read-write, adds
+   `10.42.0.1  parkvapatrol.com` to `/etc/hosts`, and writes the `cdc-wdm0`
+   (cellular), `eth0` (shared-ethernet), `enP5p4s0` (poe-0), and `enP5p5s0` (poe-1)
+   connection files under `/etc/NetworkManager/system-connections/` at `0600`. All of
+   this is idempotent — re-running does not duplicate entries.
+3. **Device variables**: sets the five `MASKCAM_*` variables for the `lpr-scan`
+   service (`MASKCAM_CLIENT_ID`, `MASKCAM_PERMIT_SYSTEM`, `MASKCAM_TOWER_SYSTEM`,
+   `MASKCAM_DEVICE_PASSWORD`, `MASKCAM_PROCESSOR_TYPE`).
+4. **Shuts down** the device — the new config loads on next boot, so you can unplug
+   it and move on to the next one.
+
+Preview everything without touching the device with `--dry-run`:
+
+```sh
+./scripts/provision-device.sh <device-uuid> <number> --dry-run
+```
+
+Notes:
+
+- The device must be **online** in balenaCloud (host OS SSH and shutdown require it).
+- The values applied (name prefix/suffix, hosts entry, PoE static IPs, and
+  `MASKCAM_*` values) live in a config block at the top of the script — edit there if
+  they change.
