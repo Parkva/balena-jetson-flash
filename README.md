@@ -125,9 +125,26 @@ In installer-01 device:
 1. Download jetson-flash from https://github.com/balena-os/jetson-flash
 2. Switch to the parkva branch
 3. Install NodeJS version 12.22.12 and npm init to install dependencies
+
+   > **Important:** This tool only works on Node v12 (versions newer than v12 are
+   > incompatible — see issue #48). installer-01 defaults to a newer Node, so the
+   > native `ext2fs` module will throw a `NODE_MODULE_VERSION` mismatch error unless
+   > you switch to Node 12 first. A `.nvmrc` is included, so from the repo directory
+   > just run `nvm use` before flashing (installs v12.22.12 with `nvm install`
+   > if you don't have it yet):
+   >
+   > ```sh
+   > cd ~/balena-jetson-flash   # or wherever you cloned it
+   > nvm use                    # reads .nvmrc -> Node v12.22.12
+   > ```
+   >
+   > You must run `nvm use` in every new terminal session, since the shell default
+   > stays on the newer Node.
+
 4. To flash:
 
 ```jsx
+nvm use   # ensure Node v12 is active (see note above)
 ./bin/cmd.js -f /images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img  -m jetson-xavier-nx-devkit-emmc
 ```
 
