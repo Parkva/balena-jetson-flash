@@ -148,6 +148,18 @@ nvm use   # ensure Node v12 is active (see note above)
 ./bin/cmd.js -f /images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img  -m jetson-xavier-nx-devkit-emmc
 ```
 
+   > **Tip:** About a minute in, the tool runs `flash.sh` under `sudo` and will
+   > prompt for your password mid-flash. To get the prompt out of the way up front,
+   > prime sudo's credential cache first (same terminal), so the later `sudo` call
+   > reuses it silently:
+   >
+   > ```sh
+   > sudo -v && ./bin/cmd.js -f /images/balena-cloud-patrol-prod-jetson-xavier-nx-devkit-emmc-2.98.33-v13.1.11.img -m jetson-xavier-nx-devkit-emmc
+   > ```
+   >
+   > The cache lasts ~15 min by default; for a longer flash, re-run `sudo -v` shortly
+   > beforehand.
+
 ## Parkva Patrol System and Application Setup
 
 ### Background information on Balena OS
