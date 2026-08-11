@@ -160,6 +160,35 @@ nvm use   # ensure Node v12 is active (see note above)
    > The cache lasts ~15 min by default; for a longer flash, re-run `sudo -v` shortly
    > beforehand.
 
+#### Dedicated flashing machine: skip the sudo prompt entirely
+
+On a dedicated, single-operator flashing station you can drop the password prompt for
+good with a scoped `sudoers` rule. The tool only ever runs two commands as root —
+`flash.sh` (from `/tmp/Linux_for_Tegra`) and `rm -r /tmp/Linux_for_Tegra` for cleanup
+— so the rule is limited to just those. Run once:
+
+```sh
+cat > /tmp/jetson-flash-sudoers <<'EOF'
+# jetson-flash: let the flashing tool run its two root commands without a password.
+davidm ALL=(root) NOPASSWD: /tmp/Linux_for_Tegra/flash.sh *
+davidm ALL=(root) NOPASSWD: /usr/bin/rm -r /tmp/Linux_for_Tegra
+EOF
+
+sudo visudo -cf /tmp/jetson-flash-sudoers          # must print: parsed OK
+
+sudo install -m 0440 -o root -g root /tmp/jetson-flash-sudoers /etc/sudoers.d/jetson-flash
+rm /tmp/jetson-flash-sudoers
+```
+
+Replace `davidm` with your username. Verify with `sudo -l` (it should list the two
+NOPASSWD entries). Validate *before* installing — a malformed file in
+`/etc/sudoers.d/` breaks `sudo` entirely.
+
+> **Security note:** because `/tmp` is world-writable, this NOPASSWD rule lets any
+> local user place their own `flash.sh` there and run it as root without a password.
+> That is acceptable on a dedicated single-user flashing box, but do **not** apply it
+> on a shared/multi-user machine.
+
 ## Parkva Patrol System and Application Setup
 
 ### Background information on Balena OS
