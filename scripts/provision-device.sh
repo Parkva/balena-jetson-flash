@@ -41,6 +41,13 @@ MASKCAM_PROCESSOR_TYPE="xaviernx"
 POE0_ADDRESS="192.168.0.50/24,192.168.0.1"
 POE1_ADDRESS="192.168.1.50/24,192.168.1.1"
 
+# Give the balena CLI's bundled Node more time to establish a connection. On hosts
+# with broken IPv6 and a slow IPv4 connect, Node's default 250ms per-address window
+# makes every balena API call fail with a generic "fetch failed"; raising it fixes
+# that and is harmless on healthy networks (it only raises an upper bound). This only
+# affects the balena CLI invoked below, not the Node 12 flashing tool.
+export NODE_OPTIONS="--network-family-autoselection-attempt-timeout=15000${NODE_OPTIONS:+ $NODE_OPTIONS}"
+
 # ---------------------------------------------------------------------------
 # Args
 # ---------------------------------------------------------------------------
